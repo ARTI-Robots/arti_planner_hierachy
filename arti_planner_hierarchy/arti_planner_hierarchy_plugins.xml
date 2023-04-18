@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<library path="lib/libarti_planner_hierarchy">
+
+  <class name="arti_planner_hierarchy/GlobalPlannerHierarchy"
+         type="arti_planner_hierarchy::GlobalPlannerHierarchy"
+         base_class_type="arti_nav_core::BaseGlobalPlanner">
+    <description>
+      Usage of different planners after each other in a hierarchy
+    </description>
+  </class>
+
+  <class name="arti_planner_hierarchy/LocalPlannerHierarchy"
+         type="arti_planner_hierarchy::LocalPlannerHierarchy"
+         base_class_type="arti_nav_core::BaseLocalPlanner">
+    <description>
+      Usage of different planners after each other in a hierarchy
+    </description>
+  </class>
+</library>
