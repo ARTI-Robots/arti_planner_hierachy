@@ -1,0 +1,198 @@
+type: arti_planner_hierarchy/LocalPlannerHierarchy
+planners:
+  -
+    plugin_type: arti_wrap_old_nav_core/BaseLocalPlannerWrapper
+    plugin_name: DWALocaLPlanner
+  -
+    plugin_type: arti_wrap_old_nav_core/BaseLocalPlannerWrapper
+    plugin_name: TEBLocaLPlanner
+#  -
+#  plugin_type: myplugin/MylocalPlanner
+#  plugin_name: MyLocalPlannerConfig
+#MyLocalPlannerConfig:
+#  wrapped_type: my_local_planner/MyPlannerROS
+#  configstuff here 
+
+#Example configuration for DWA & TEB:
+DWALocaLPlanner:
+  wrapped_type: dwa_local_planner/DWAPlannerROS
+  odom_topic: ukf_pose
+  max_vel_x: 1.5  # 0.55
+  min_vel_x: -1.0 
+
+  max_vel_y: 0.05  # diff drive robot
+  min_vel_y: -0.05  # diff drive robot
+
+  max_trans_vel: 1.50  # choose slightly less than the base's capability
+  min_trans_vel: 0.11  # this is the min trans velocity when there is negligible rotational velocity
+  trans_stopped_vel: 0.3
+
+  # Warning!
+  #   do not set min_trans_vel to 0.0 otherwise dwa will always think translational velocities
+  #   are non-negligible and small in place rotational velocities will be created.
+
+  max_rot_vel: 0.6  # choose slightly less than the base's capability
+  min_rot_vel: 0.1  # this is the min angular velocity when there is negligible translational velocity
+  #rot_stopped_vel: 0.4
+
+  acc_lim_x: 4.0 # maximum is theoretically 2.0, but we 
+  acc_lim_y: 0.0      # diff drive robot
+  acc_lim_theta: 2.0
+
+  # Goal Tolerance Parameters
+  xy_goal_tolerance: 0.5  # 0.10
+  yaw_goal_tolerance: 0.5  # 0.05
+  #latch_xy_goal_tolerance: false
+
+  # Forward Simulation Parameters
+  sim_time: 6.0       # is valuable for smooth driving but only works with use_dwa true else robot draws circles around goal
+  sim_granularity: 0.1
+  angular_sim_granularity: 0.3
+  vx_samples: 30      # 3
+  vy_samples: 1       # diff drive robot, there is only one sample
+  vth_samples: 60     # 20
+
+  # Trajectory Scoring Parameters
+  path_distance_bias: 0.01
+  goal_distance_bias: 10.0
+  occdist_scale: 5.0
+  #path_distance_bias: 32.0      # 32.0   - weighting for how much it should stick to the global path plan
+  #goal_distance_bias: 24.0      # 24.0   - weighting for how much it should attempt to reach its goal
+  #occdist_scale: 0.01           # 0.01   - weighting for how much the controller should avoid obstacles
+  forward_point_distance: 0.325   # 0.325  - how far along to place an additional scoring point
+  stop_time_buffer: 1.0         # 0.2    - amount of time a robot must stop in before colliding for a valid traj.
+  scaling_speed: 0.35            # 0.25   - absolute velocity at which to start scaling the robot's footprint
+  max_scaling_factor: 1.0       # 0.2    - how much to scale the robot's footprint when at speed.
+  penalize_negative_x: true
+
+  # Oscillation Prevention Parameters
+  oscillation_reset_dist: 0.05  # 0.05   - how far to travel before resetting oscillation flags
+  #oscillation_reset_angle: 0.0
+
+  # Debugging
+  publish_traj_pc : true
+  publish_cost_grid_pc: true
+  global_frame_id: map
+  publish_cost_grid: true
+  execution_dealy: 1.0
+
+  use_dwa: true
+
+  # Differential-drive robot configuration - necessary?
+  #holonomic_robot: false
+
+  min_turning_radius: 1.0 #1.7
+
+
+TEBLocaLPlanner:
+  wrapped_type: teb_local_planner/TebLocalPlannerROS
+
+  odom_topic: ukf_pose
+  map_frame: map
+  # Trajectory
+
+  teb_autosize: True
+  dt_ref: 0.3
+  dt_hysteresis: 0.05
+  global_plan_overwrite_orientation: True
+  max_global_plan_lookahead_dist: 30.0
+  allow_init_with_backwards_motion: true
+  force_reinit_new_goal_dist: 1.0
+  feasibility_check_no_poses: 10
+  global_plan_viapoint_sep: 3.0 # -0.1 #if negative, disabled
+  exact_arc_length: True
+  publish_feedback: False
+
+
+  # Robot
+
+  max_vel_x: 2.8
+  max_vel_x_backwards: 2.8
+  max_vel_y: 0.0
+  max_vel_theta: 0.5 #1.5
+  acc_lim_x: 0.25 #1.15
+  acc_lim_y: 0.01
+  acc_lim_theta: 0.2 #1.5
+  min_turning_radius: 4.0 # diff-drive robot (can turn on place!)
+  wheelbase: 1.278
+  cmd_angle_instead_rotvelis: false
+
+  footprint_model:
+   type: "line"
+   line_start: [-1.35, 0.0] # for type "line"
+   line_end: [1.35, 0.0] # for type "line"
+
+  # GoalTolerance
+
+  xy_goal_tolerance: 1.5 #0.31 # 0.10
+  yaw_goal_tolerance: 1.14 #0.11 # 0.05
+  free_goal_vel: False
+
+  # Obstacles
+
+  min_obstacle_dist: 1.75 # This value must also include our robot radius, since footprint_model is set to "point".
+  inflation_dist: 3.0
+  include_costmap_obstacles: False
+
+  legacy_obstacle_association: False
+  obstacle_association_force_inclusion_factor: 1.5
+  # Just check difference:
+  costmap_obstacles_behind_robot_dist: 1.5
+  obstacle_poses_affected: 28
+  #costmap_converter_plugin: ""
+  costmap_converter_plugin: "costmap_converter::CostmapToPolygonsDBSMCCH"
+    #costmap_converter_plugin: "costmap_converter::CostmapToLinesDBSRANSAC"
+    #costmap_converter_plugin: "costmap_converter::CostmapToLinesDBSMCCH"
+    #costmap_converter_plugin: "costmap_converter::CostmapToPolygonsDBSConcaveHull"
+  costmap_converter_spin_thread: True
+  costmap_converter_rate: 7
+
+  # ## Configure plugins (namespace move_base/costmap_to_lines or move_base/costmap_to_polygons)
+    ## costmap_converter/CostmapToLinesDBSRANSAC, costmap_converter/CostmapToLinesDBSMCCH, costmap_converter/CostmapToPolygonsDBSMCCH
+  #  costmap_converter/CostmapToLinesDBSRANSAC:
+  #    cluster_max_distance: 0.4
+  #    cluster_min_pts: 2
+  #    ransac_inlier_distance: 0.15
+  #    ransac_min_inliers: 10
+  #    ransac_no_iterations: 1500
+  #    ransac_remainig_outliers: 3
+  #    ransac_convert_outlier_pts: True
+  #    ransac_filter_remaining_outlier_pts: False
+  #    convex_hull_min_pt_separation: 0.1
+
+  # Optimization
+
+  no_inner_iterations: 4
+  no_outer_iterations: 3
+  optimization_activate: True
+  optimization_verbose: False
+  penalty_epsilon: 0.1
+  weight_max_vel_x: 2.0
+  weight_max_vel_theta: 1.0
+  weight_acc_lim_x: 1.0
+  weight_acc_lim_theta: 1.0
+  weight_kinematics_nh: 800.0
+  weight_kinematics_forward_drive: 35.0
+  weight_kinematics_turning_radius: 1.0
+  weight_optimaltime: 15.0
+  weight_obstacle: 11.0
+  #weight_dynamic_obstacle: 10 # not in use yet
+
+  # Homotopy Class Planner
+
+  enable_homotopy_class_planning: False
+  enable_multithreading: True
+  simple_exploration: False
+  max_number_classes: 4
+  selection_cost_hysteresis: 1.0
+  selection_obst_cost_scale: 100.0
+  selection_alternative_time_cost: False
+
+  roadmap_graph_no_samples: 15
+  roadmap_graph_area_width: 6
+  h_signature_prescaler: 1.0
+  h_signature_threshold: 0.1
+  obstacle_keypoint_offset: 0.1
+  obstacle_heading_threshold: 1.0
+  visualize_hc_graph: False
+
